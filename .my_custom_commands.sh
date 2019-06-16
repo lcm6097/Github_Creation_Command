@@ -13,7 +13,7 @@ function create_project() {
         # Create test repository
         REPO=$(python3 .create_github_repo.py $PROJ_FOLDER $VIS $CONFIG_FILE)
         # Get test project folder
-        PROJS_FOLDER=$(python3 -c "import json; print(json.load('$CONFIG_FILE')['project_folder'])")
+        PROJS_FOLDER=$(python3 -c "import json; print(json.load(open('$CONFIG_FILE'))['project_folder'])")
         CURR_PROJ_FOLDER=$PROJS_FOLDER$PROJ_FOLDER
         echo $CURR_PROJ_FOLDER
     
@@ -43,6 +43,7 @@ function create_project() {
         # Do inital commit with a .gitignore file
         echo $REPO
         cd $CURR_PROJ_FOLDER
+        git config --global credential.helper cache
         git clone $REPO .
         git branch -a
         touch .gitignore
@@ -64,7 +65,7 @@ function delete_project() {
         # Set configuration file to custom
         CONFIG_FILE=.custom_config_file.json
         PROJ_FOLDER='test'
-        PROJS_FOLDER=$(python3 -c "import json; print(json.load('$CONFIG_FILE')['project_folder'])")
+        PROJS_FOLDER=$(python3 -c "import json; print(json.load(open('$CONFIG_FILE'))['project_folder'])")
         CURR_PROJ_FOLDER=$PROJS_FOLDER$PROJ_FOLDER
 
     else
@@ -78,19 +79,19 @@ function delete_project() {
             CONFIG_FILE=~/.create_github_repo_config.json
         fi
         PROJ_FOLDER=$1
-        PROJS_FOLDER=$(python3 -c "import json; print(json.load('$CONFIG_FILE')['project_folder'])")
+        PROJS_FOLDER=$(python3 -c "import json; print(json.load(open('$CONFIG_FILE'))['project_folder'])")
         CURR_PROJ_FOLDER=$PROJS_FOLDER$PROJ_FOLDER
 
 
     fi
 
-    USER=$(python3 -c "import json; print(json.load('$CONFIG_FILE')['user'])")
-    TOKEN=$(python3 -c "import json; print(json.load('$CONFIG_FILE')['token'])")
+    USER=$(python3 -c "import json; print(json.load(open('$CONFIG_FILE'))['user'])")
+    TOKEN=$(python3 -c "import json; print(json.load(open('$CONFIG_FILE'))['token'])")
     echo $USER
     echo $TOKEN
     curl -u $USER:$TOKEN -X DELETE https://api.github.com/repos/$USER/$PROJ_FOLDER
     cd $CURR_PROJ_FOLDER
     cd ..
     rm -rf $PROJ_FOLDER
-        
+    cd ~
 }
