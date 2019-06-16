@@ -141,8 +141,8 @@ if __name__ == "__main__":
         set_global_variables()
         logging.debug("Using DEFAULT config file .create_github_repo_config.json")
 
-    #folder = create_folder(projName)
-    '''
+    folder = create_folder(projName)
+    
     if folder:
         repo = create_repository(projName, visibility)
         if repo == '':
@@ -152,4 +152,4 @@ if __name__ == "__main__":
             logging.debug(repo[1])
     else:
         print('ERROR')
-        '''
+    
