@@ -13,15 +13,47 @@ import pprint
 import logging
 
 # Project location
-# ###########FIX: This will later become a config file setting
-projectLocation = '/home/maga8990/Documents/Projects/MyProjects/'
-#Create repository in GitHub
+projectLocation = ''
 # User Data
-# ###########FIX: This will later become a config file setting
-user = "lcm6097"
-token = "5ff87121bee7b5960f428b7b09dac87a46efd519"
-#G ithub REST API URL
-url = "https://api.github.com/"
+user = ""
+token = ""
+#GitHub preferences
+license_template = ''
+auto_init = ''
+
+
+def set_global_variables(configFile='.create_github_repo_config.json'):
+    """
+    This cuntion reads the json config file to find the preferences the user set to send to
+    GitHub API and also to set a project folder location. MAKE SURE THE LOCATION EXISTS ALREADY.
+    @param: configFile: A user can pass in a custom config file for one off runs or it will use the
+                        default config file
+    """
+    # Gets the path of the JSON file, it should be in the same directory as the python file
+    json_file_path = str(os.path.dirname(os.path.realpath(__file__))+'/'+str(configFile))
+    # Opens file in read mode
+    json_file = open(json_file_path, 'r')
+    # Loads JSON file
+    config = json.load(json_file)
+
+    # Sets global variables so the API function can use it
+    global projectLocation
+    projectLocation = config['project_folder']
+    logging.debug('Setting project location to: '+projectLocation)
+    global user
+    user = config['user']
+    logging.debug('Setting user to: '+user)
+    global token
+    token = config['token']
+    logging.debug('Setting token to: '+token)
+    global license_template
+    license_template = config['license_template']
+    logging.debug('Setting license_template to: '+license_template)
+    global auto_init
+    auto_init = config['auto_init']
+    logging.debug('Setting auto_init to: '+auto_init)
+    
+    return
 
 
 def create_folder(projectName):
@@ -32,7 +64,7 @@ def create_folder(projectName):
     # Make directory
     try:
         # ###########FIX: This will later become a config file setting
-        os.mkdir('/home/maga8990/Documents/Projects/MyProjects/'+projectName)
+        os.mkdir(projectLocation+projectName)
         logging.debug("Directory created")
         return True
     except FileExistsError:
@@ -48,14 +80,18 @@ def create_repository(projectName, visibility):
             visibility: Either a private or public repository
             description: Description of the new project
     """
+
+    # Github REST API URL
+    url = "https://api.github.com/"
+
     logging.debug("Describe the project:")
     description = input()
     # Payload to create a repository
     payload = {'name': projectName,
                 'description': description,
                 'private': visibility,
-                'auto_init': 'true',
-                'license_template': 'gpl-3.0'}
+                'auto_init': auto_init,
+                'license_template': license_template}
 
     # Make POST request to create repository 
     r = requests.post((url+'user/repos'), auth=(user,token), json=payload)
@@ -86,7 +122,6 @@ if __name__ == "__main__":
     visibility = str(sys.argv[2]).lower()
     logging.debug("Setting the visibility var to -> "+visibility)
 
-
     # Set visibility on GitHub
     if visibility == 'private':
         visibility = 'true'
@@ -98,8 +133,16 @@ if __name__ == "__main__":
         exit()
     logging.debug("visibility set to -> "+visibility)
 
-    folder = create_folder(projName)
 
+    if len(sys.argv) == 4:
+        set_global_variables(configFile=sys.argv[3])
+        logging.debug("Using CUSTOM config file " + sys.argv[3])
+    else:
+        set_global_variables()
+        logging.debug("Using DEFAULT config file .create_github_repo_config.json")
+
+    #folder = create_folder(projName)
+    '''
     if folder:
         repo = create_repository(projName, visibility)
         if repo == '':
@@ -109,3 +152,4 @@ if __name__ == "__main__":
             logging.debug(repo[1])
     else:
         print('ERROR')
+        '''

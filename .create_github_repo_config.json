@@ -1,0 +1,7 @@
+{
+	"project_folder": "project_folder",
+	"user": "user",
+    "token": "token",
+    "license_template":"gpl-3.0",
+    "auto_init":"true"
+}
