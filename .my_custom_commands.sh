@@ -13,6 +13,9 @@ function create_project() {
         git clone $REPO .
         git branch -a
         touch .gitignore
+        git add -A
+        git commit -m "Initial Commit with .gitignore"
+        git push origin master
     fi
 
 }
