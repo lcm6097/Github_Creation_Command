@@ -20,6 +20,8 @@ token = ""
 #GitHub preferences
 license_template = ''
 auto_init = ''
+# Github REST API URL
+url = "https://api.github.com/"
 
 
 def set_global_variables(configFile='.create_github_repo_config.json'):
@@ -56,6 +58,25 @@ def set_global_variables(configFile='.create_github_repo_config.json'):
     return
 
 
+def create_git_project(projectName):
+
+    # Setting the Accept header to accept the preview API
+    headers = {'Accept':'application/vnd.github.inertia-preview+json'}
+    logging.debug('The user is '+user)
+    logging.debug('Token is '+token)
+
+    # Setting up the endpoint to get resource
+    url_extra = 'repos/{0}/{1}/projects'.format(user, projectName)
+
+    # Setting the payload to create project
+    payload = {'name': projectName}
+    
+    # Making the request
+    r = requests.post(url+url_extra, headers=headers, auth=(user,token), json=payload)
+
+    return
+
+
 def create_folder(projectName):
     """
     This function creates the folder for the project in the Projects directory
@@ -80,9 +101,6 @@ def create_repository(projectName, visibility):
             visibility: Either a private or public repository
             description: Description of the new project
     """
-
-    # Github REST API URL
-    url = "https://api.github.com/"
 
     logging.debug("Describe the project:")
     description = input()
@@ -112,44 +130,52 @@ def create_repository(projectName, visibility):
 
 
 if __name__ == "__main__":
-    #logging settings
-    logging.basicConfig(level=logging.DEBUG)
 
-    # Project name and folder name in Project folder
-    projName = str(sys.argv[1])
-    logging.debug("Setting the projName var to -> "+projName)
-    # Is project private or public on GitHub
-    visibility = str(sys.argv[2]).lower()
-    logging.debug("Setting the visibility var to -> "+visibility)
-
-    # Set visibility on GitHub
-    if visibility == 'private':
-        visibility = 'true'
-    elif visibility == 'public':
-        visibility = 'false'
+    if sys.argv[1] == 'debug':
+        #logging settings
+        logging.basicConfig(level=logging.DEBUG)
+        logging.debug('YOU ARE ON DEBUG MODE')
+        set_global_variables(configFile='.custom_config_file.json')
     else:
-        logging.error('Set visibility to either "private" or "public"')
-        print('ERROR')
-        exit()
-    logging.debug("visibility set to -> "+visibility)
-
-
-    if len(sys.argv) == 4:
-        set_global_variables(configFile=sys.argv[3])
-        logging.debug("Using CUSTOM config file " + sys.argv[3])
-    else:
-        set_global_variables()
-        logging.debug("Using DEFAULT config file .create_github_repo_config.json")
-
-    folder = create_folder(projName)
-    
-    if folder:
-        repo = create_repository(projName, visibility)
-        if repo == '':
-            print('ERROR')
+        # Getting config file preferences
+        if len(sys.argv) == 4:
+            set_global_variables(configFile=sys.argv[3])
+            logging.debug("Using CUSTOM config file " + sys.argv[3])
         else:
-            print(repo) 
-            logging.debug(repo[1])
-    else:
-        print('ERROR')
+            set_global_variables()
+            logging.debug("Using DEFAULT config file .create_github_repo_config.json")
+
+        #logging settings
+        logging.basicConfig(level=logging.DEBUG)
+
+        # Project name and folder name in Project folder
+        projName = str(sys.argv[1])
+        logging.debug("Setting the projName var to -> "+projName)
+        # Is project private or public on GitHub
+        visibility = str(sys.argv[2]).lower()
+        logging.debug("Setting the visibility var to -> "+visibility)
+
+        # Set visibility on GitHub
+        if visibility == 'private':
+            visibility = 'true'
+        elif visibility == 'public':
+            visibility = 'false'
+        else:
+            logging.error('Set visibility to either "private" or "public"')
+            print('ERROR')
+            exit()
+        logging.debug("visibility set to -> "+visibility)
+
+        folder = create_folder(projName)
+        
+        if folder:
+            repo = create_repository(projName, visibility)
+            if repo == '':
+                print('ERROR')
+            else:
+                print(repo) 
+                logging.debug(repo[1])
+                create_git_project(projName)
+        else:
+            print('ERROR')
     
