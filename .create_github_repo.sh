@@ -1,7 +1,107 @@
 #!/bin/bash
 
+function create_github_repo() {
+
+    create=false
+    delete=false
+    install=false
+    usage=false
+    debug=false
+    name=""
+    vis=""
+    config=""
+
+    while getopts "bcdihn:v:g:" OPTION
+    do
+        case $OPTION in
+            c)
+                create=true
+                shift
+                ;;
+            d)
+                delete=true
+                shift
+                ;;
+            i)
+                install=true
+                shift
+                ;;
+            b)
+                debug=true
+                shift
+                ;;
+            n)
+                name="$OPTARG"
+                create=true
+                shift
+                ;;
+            v)
+                vis="$OPTARG"
+                create=true
+                shift
+                ;;
+            g)
+                config="$OPTARG"
+                create=true
+                shift
+                ;;
+            \?|h)
+                #usage
+                echo 'help!!!'
+                exit 0
+                ;;
+        esac
+    done
+
+    if [[ $debug ]]; then
+        __create_project 'debug'
+        __delete_project 'debug'
+        exit 0
+    fi
+
+    if [[ $create ]] && [[ ! $delete ]] && [[ ! $install ]]; then
+    #CREATE command
+        if [[ $name -eq "" ]] || [[ $vis -eq "" ]]; then
+            echo 'Pass in the name of the project you want to delete with the flag -n <project_name>'
+            echo 'Pass in the name of the project you want to delete with the flag -v <private>/<public>'
+            exit 1
+        fi
+
+        if [[ ! $config -eq "" ]]; then
+            __create_project $name $vis $config
+        fi
+        __create_project $name $vis
+
+    elif [[ ! $create ]] && [[ $delete ]] && [[ ! $install ]]; then
+    #DELETE command
+        #No name, exit
+        if [[ $name -eq "" ]]; then
+            echo 'Pass in the name of the project you want to delete with the flag -n <project_name>'
+            exit 1
+        fi
+        #COnfig file passed in
+        if [[ ! $config -eq "" ]]; then
+            __delete_project $name $config
+        fi
+        #Default config
+        __delete_project $name
+
+    elif [[ ! $create ]] && [[ ! $delete ]] && [[ $install ]]; then
+    #install command
+        __install
+
+    else
+    #error
+        echo 'Error: the create, delete and install commands are mutually exclusive'
+        echo 'Help is below:'
+        #usage
+    fi
+
+    exit 0
+}
+
 # Creates new project
-function create_project() {
+function __create_project() {
     if [ 'debug' = $1 ]; then
         # Going into Debug mode
         echo 'debug mode'
@@ -38,7 +138,7 @@ function create_project() {
 
     if [ "$REPO" = "ERROR" ]; then
             # Error when creating the REPO
-            echo error found, check log
+            echo error found, check log; exit 0 ;;
     else
         # Do inital commit with a .gitignore file
         echo $REPO
@@ -52,9 +152,11 @@ function create_project() {
         git push origin master
     fi
 
+    exit 0
+
 }
 
-function delete_project() {
+function __delete_project() {
     if [ $# -lt 1 ] && [ $# -gt 2 ]; then
         exit 1
     fi
@@ -94,4 +196,20 @@ function delete_project() {
     cd ..
     rm -rf $PROJ_FOLDER
     cd ~
+
+    exit 0
+}
+
+function __install() {
+    if [[ -f ~/.create_github_repo_config.json ]]; then
+        sudo cp .create_github_repo.sh .create_github_repo.py ~
+    fi
+    sudo cp .create_github_repo.sh .create_github_repo_config.json .create_github_repo.py ~
+    if [[ ! grep -Fxq "source ~/.create_github_repo.sh"]]; then
+        echo 'source ~/.create_github_repo.sh' >> ~/.bashrc
+    fi
+    echo 'Installation complete'
+
+    exit 0
+
 }
